@@ -14,16 +14,17 @@ int server_handshake(int *to_client) {
     mkfifo(WKP, 0644);
 
     from_client = open("mario", O_RDONLY);
-    printf("opened from_client\n");
-    char s[100];
-    read(from_client, s, sizeof(s));
-    printf("ACK: %s\n", s);
+    printf("[server] Opened WKP\n");
+    char s[HANDSHAKE_BUFFER_SIZE];
+    read(from_client, s, HANDSHAKE_BUFFER_SIZE);
+    printf("[server] Received ACK: %s\n", s);
+    remove(WKP);
+
     *to_client = open(s, O_WRONLY);
     write(*to_client, "hello", 5);
-    char r[100];
-    read(from_client, r, sizeof(r));
-    printf("Received: %s\n", r);
-    remove(WKP);
+    char r[HANDSHAKE_BUFFER_SIZE];
+    read(from_client, r, HANDSHAKE_BUFFER_SIZE);
+    printf("[server] Received Message: %s\n", r);
     remove(ACK);
     printf("Removed pipes\n");
     return from_client;
@@ -42,15 +43,15 @@ int client_handshake(int *to_server) {
     
     mkfifo(ACK, 0644);
     *to_server = open(WKP, O_WRONLY);
-    write(*to_server, ACK, sizeof(ACK));
-    printf("Wrote to server\n");
+    printf("[client] Connected to WKP\n");
+    write(*to_server, ACK, HANDSHAKE_BUFFER_SIZE);
     from_server = open(ACK, O_RDONLY);
     char s[100];
-    read(from_server, s, sizeof(s));
-    printf("Message: %s\n", s);
+    read(from_server, s, HANDSHAKE_BUFFER_SIZE);
+    printf("[client] Message: %s\n", s);
     s[0]++;
-    write(*to_server, s, sizeof(s));
-    printf("Wrote again\n");
+    write(*to_server, s, HANDSHAKE_BUFFER_SIZE);
+    //printf("Wrote again\n");
 
     return from_server;
 }
